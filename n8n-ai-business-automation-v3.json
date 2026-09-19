@@ -1,0 +1,580 @@
+{
+  "name": "AI Business Automation Platform",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ae448272-ed81-4451-b8a8-f9b757c93419",
+      "name": "Telegram Trigger",
+      "webhookId": "b5e1b42d-4704-435f-b922-1a92c5816f2e",
+      "credentials": {
+        "telegramApi": {
+          "id": "RNlOO8xqdv5YCdsk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are an AI customer support and sales assistant for Prince Digital Solutions.\n\nBe friendly, helpful, concise, and factual. Never invent information.\n\nCUSTOMER LOOKUP\n\nFor questions about registration, accounts, customer identity, confirmation emails, or lead creation:\n\n1. Use the Customers Supabase Tool.\n2. Search using the Telegram ID:\n{{ $json.telegram_id }}\n3. Use the customer's returned UUID `id` as customer_id when required.\n4. Never use the Telegram ID as customer_id.\n5. Never invent or guess customer information.\n\nREGISTRATION\n\nWhen a customer wants to register:\n\n1. Check Customers first using their Telegram ID.\n2. If already registered, do not create another record.\n3. If not registered, collect:\n   - Full name\n   - Phone number\n   - Email\n4. Ask for missing details one at a time.\n5. Never invent, guess, or use placeholders.\n6. Do not use memory as a substitute for missing registration details.\n7. When all details are available, use Create Customer Supabase Tool.\n8. Use:\n   name = {{ $json.customer_name }}\n   telegram_id = {{ $json.telegram_id }}\n9. Only confirm registration after successful customer creation.\n\nCONVERSATION LOGGING\n\nFor a completed conversation with a registered customer:\n\n1. Use Customers Supabase Tool to find the customer.\n2. Use the customer's UUID `id` as customer_id.\n3. Save the customer's current message as message.\n4. Save the final AI response as response.\n5. Never use Telegram ID as customer_id.\n\nFor a new customer registering, log the conversation only after successful customer creation.\n\nPRODUCTS\n\nWhen the customer asks about products or services:\n\n1. ALWAYS use the Products tool first.\n2. List ALL products returned by the tool.\n3. NEVER use a table.\n4. NEVER use Markdown table formatting.\n5. Use ONLY this format:\n\nHere are the services we offer:\n\n1. Product Name\n\n* Description: Product description\n* Price: Product price\n* Availability: Product availability\n\n2. Product Name\n\n* Description: Product description\n* Price: Product price\n* Availability: Product availability\n\nContinue numbering until ALL returned products are listed.\n\nUse the exact product information returned by the Products tool. Never invent or modify it.\n\nOUTPUT FORMAT RULES\n\nFor product and service lists:\n\n* Use plain text only.\n* Do not use Markdown.\n* Do not use bold text.\n* Do not use backslashes.\n* Do not use tables.\n* Do not use Markdown bullets.\n* Use a normal hyphen `-` for each Description, Price, and Availability line.\n* Use normal numbers followed by a period: `1.`, `2.`, `3.`, etc.\n\n\n\nGMAIL\n\nFor a NEW successful registration:\n\n1. Only send Gmail after Create Customer Supabase Tool succeeds.\n2. Use the customer's actual name, phone, and email.\n3. Send the registration confirmation using Gmail Tool.\n4. Do not send it if customer creation fails.\n5. After Gmail succeeds, tell the customer the confirmation email was sent.\n\nFor an EXISTING customer requesting their registration confirmation:\n\n1. Check Customers using Telegram ID.\n2. If found, use the stored name, phone, and email.\n3. Do not register them again.\n4. Send the confirmation using Gmail Tool.\n5. Do not ask for information already stored.\n6. If no customer is found, do not send the email.\n\nLEADS\n\nCreate a lead with Create Lead Supabase Tool when a customer shows genuine sales interest, such as:\n- asking to buy a product/service\n- saying they want to proceed\n- asking to start a project\n- providing a budget for a product/service\n\nDo not create leads for greetings, casual conversation, general questions, or unrelated questions.\n\nBefore creating a lead:\n1. Use Customers Supabase Tool.\n2. Use the customer's UUID `id` as customer_id.\n3. Never use Telegram ID as customer_id.\n\nLead fields:\n- interest = actual product/service discussed\n- budget = customer's stated budget, if provided\n- intent = High, Medium, or Low based on the customer's messages\n- status = New\n- source = Telegram\n\nNever invent or guess customer information, interest, budget, or intent. \n\nAPPOINTMENTS\n\nWhen a customer wants to book or schedule an appointment:\n\n1. Use Customers Supabase Tool to find the customer using their Telegram ID.\n2. Use the customer's UUID `id` as customer_id.\n3. Never use the Telegram ID as customer_id.\n4. Collect the appointment date.\n5. Collect the appointment time.\n6. Ask for any missing information one item at a time.\n7. Do not create an appointment until both date and time are clearly provided.\n8. When date and time are available, use Create Appointment Supabase Tool.\n9. For a new appointment, status must be Pending.\n10. Only confirm the appointment after the Supabase tool successfully creates it.\n11. Never invent or guess a date or time.\n\nHUMAN HANDOFF\n\nIf a customer clearly asks to speak with a human, requests human assistance, or has an issue that requires human intervention:\n\n1. Clearly acknowledge the request.\n2. Tell the customer that their request will be handled by a human.\n3. The conversation must be logged with escalated = true.\n\nFor normal questions and requests, escalated must be false."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "fb25a3e3-6bc3-4e8a-ad65-b53ba6d97834",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.cleanResponse }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        0
+      ],
+      "id": "8d8bfc81-b9de-4eaf-9729-db48228d6fdf",
+      "name": "Send a text message",
+      "webhookId": "351bb49d-edff-4a3a-a1a3-644e030d47c3",
+      "retryOnFail": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "RNlOO8xqdv5YCdsk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search the products table to find business services, descriptions, prices, and availability.",
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true,
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        544,
+        560
+      ],
+      "id": "b166f59b-b428-487c-9057-4888ee87912b",
+      "name": "Products",
+      "credentials": {
+        "supabaseApi": {
+          "id": "PvOTfEuzOnfdb8re",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool whenever a customer asks to check whether they are registered, asks about their customer account, or when you need to identify the current Telegram customer.\n\nThe current customer's Telegram chat ID must be used to search the customers table in the telegram_id field.\n\nDo not ask the Telegram customer for their email address or customer ID. Use their Telegram chat ID.",
+        "operation": "getAll",
+        "tableId": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telegram_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields').item.json.telegram_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        960,
+        496
+      ],
+      "id": "543d5621-2adf-4475-94ff-42f088a38c0b",
+      "name": "Customers",
+      "credentials": {
+        "supabaseApi": {
+          "id": "PvOTfEuzOnfdb8re",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a new customer record in the customers table when no existing customer is found.\n\nUse this tool when a Telegram customer needs to be registered for the first time.\n\nUse the customer's Telegram chat ID as the telegram_id field. Do not ask the customer for their Telegram ID because it is already available from the Telegram Trigger.",
+        "tableId": "customers",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "=telegram_id",
+              "fieldValue": "={{ $('Edit Fields').item.json.telegram_id }}"
+            },
+            {
+              "fieldId": "=name",
+              "fieldValue": "={{ $('Edit Fields').item.json.customer_name }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `Use the phone number provided by the customer during the current registration conversation. Never invent, guess, or use a placeholder phone number. Do not use a phone number from memory.`, 'string') }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `Use the email address provided by the customer during the current registration conversation. Never invent, guess, or use a placeholder email address. Do not use an email address from memory.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        416
+      ],
+      "id": "753d1b9f-468a-4f82-8527-71772623f2f7",
+      "name": "Create Customer Supabase Tool.",
+      "credentials": {
+        "supabaseApi": {
+          "id": "PvOTfEuzOnfdb8re",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6ee19c8-36a9-4e75-aa13-6a67bda0e831",
+              "name": "=telegram_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f28d5a19-b983-4c5b-95cd-9a121144639d",
+              "name": "=customer_name",
+              "value": "={{ $json.message.from.first_name }} {{ $json.message.from.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0dd05453-2774-4cab-8e87-0140f6a017ac",
+              "name": "=chatInput",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "268eadb4-3d78-43fc-b2d4-ce7e9324c6cd",
+              "name": "=sessionId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        240,
+        0
+      ],
+      "id": "7e451458-cc8e-43d1-b014-5c90c04db69f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        192,
+        272
+      ],
+      "id": "03d11e40-9ba1-41a0-b32f-52aa4d9bb132",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "1BxuBlwp7Wh8cNO6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 4
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        368
+      ],
+      "id": "5ee9bdd5-bd25-4e4f-ab83-73f6f36943be",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to save a completed customer conversation in the conversations table.\n\nAfter answering a registered customer, use this tool to record the customer's message and the AI assistant's final response.\n\nUse the customer's UUID from the Customers Supabase Tool as customer_id.\n\nDo not use the Telegram chat ID as customer_id.\nNever invent or guess a customer UUID.\n\nFor each completed conversation:\n- customer_id = the UUID from the customer record\n- message = the customer's current message\n- response = the final answer given by the AI assistant",
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "customer_id",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `The UUID id of the registered customer from the Customers Supabase Tool. Never use the Telegram ID. Only log conversations for a customer who exists in the customers table.`, 'string') }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `The exact message currently sent by the customer. Do not summarize, rewrite, or invent it.`, 'string') }}"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `The final response sent by the AI assistant to the customer. Save the complete response exactly as it was given to the customer.`, 'string') }}"
+            },
+            {
+              "fieldId": "escalated",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `Set to true only when the customer clearly needs human assistance or asks to speak with a human. Otherwise set to false. Do not escalate normal questions, product questions, registration, lead creation, or appointment requests.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        688,
+        544
+      ],
+      "id": "ddaf185e-4cf1-4ba1-84fe-61ab1b18bd99",
+      "name": "Log Conversation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "PvOTfEuzOnfdb8re",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Send a message in Use this tool to send a registration confirmation email to a newly registered customer.\n\nOnly use this tool after the Create Customer Supabase Tool successfully creates a new customer record.\n\nThe email must be sent to the customer's actual email address collected during the current registration conversation.\n\nUse the customer's actual:\n\n* Full name\n* Phone number\n* Email address\n\nDo not invent, guess, or use placeholder customer information.\n\nThe email should confirm that the customer's registration with Prince Digital Solutions was successful.\n\nDo not use this tool for existing customers unless a new registration has actually been completed.\nGmail",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `Use the email address provided by the customer during registration. Never invent or guess an email address.`, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `Use a professional subject confirming that the customer's registration with Prince Digital Solutions was successful.`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Create a professional HTML email confirming that the customer's registration with Prince Digital Solutions was successful. Include the customer's name, phone number, and email address provided during the registration process. Use a clean modern business design with a visually appealing background, a prominent welcome/registration-success heading, a customer details card, a thank-you message, and a professional footer. Do not invent or guess any customer information.`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        352
+      ],
+      "id": "ebfc4196-2d95-4c2d-8350-65326be95303",
+      "name": "Send a message in Gmail",
+      "webhookId": "ca34eb74-e8fc-496e-9ab3-62d90e61ab9f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iRm9tk9AjqXHS7g1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a new sales lead in the leads table.\n\nOnly use this tool when a customer has expressed genuine interest in a product or service and there is a potential sales opportunity.\n\nUse the customer's UUID from the Customers Supabase Tool as customer_id.\n\nDo not use the Telegram chat ID as customer_id.\n\nUse the customer's actual stated interest.\n\nOnly record a budget if the customer explicitly provides one. Never invent or estimate a budget.\n\nSet intent based only on the customer's messages.\n\nFor a newly created lead, status must be New.\n\nFor this workflow, source must be Telegram.\n\nDo not create a lead for ordinary greetings, general conversation, or unrelated questions.",
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "customer_id",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `Use the customer's UUID id from the Customers Supabase Tool result.\n\nThis must be the customer's UUID from the customers table.\nNever use the Telegram chat ID as customer_id.\nNever invent or guess a customer UUID.`, 'string') }}"
+            },
+            {
+              "fieldId": "interest",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `The product or service the customer is interested in.\n\nUse the customer's actual stated interest.\nDo not invent or guess an interest.\nIf the customer has not expressed a specific product or service interest, do not create a lead.`, 'string') }}"
+            },
+            {
+              "fieldId": "budget",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `The customer's stated budget for the product or service.\n\nOnly use a budget amount explicitly provided by the customer.\nDo not invent, estimate, or guess a budget.\nIf the customer has not provided a budget, leave this field empty.`, 'string') }}"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `Describe the customer's buying intent based only on what they have said.\n\nUse:\n- High — the customer clearly wants to buy, book, or proceed.\n- Medium — the customer shows serious interest but has not decided.\n- Low — the customer is only exploring or asking general questions.\n\nDo not invent or guess intent.`, 'string') }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues4_Field_Value', `The current status of the lead.\n\nFor a newly created lead, always use:\nNew\n\nDo not invent another status.`, 'string') }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues5_Field_Value', `The platform where the customer contacted the business.\n\nFor customers communicating through this workflow, always use:\nTelegram\n\nDo not invent or change the source.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        240
+      ],
+      "id": "8a276af2-4f6f-456f-b0e1-6f14d8db6671",
+      "name": "Create Lead Supabase Tool",
+      "credentials": {
+        "supabaseApi": {
+          "id": "PvOTfEuzOnfdb8re",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a row inCreate a new appointment in the appointments table.\n\nOnly use this tool when a customer has clearly requested an appointment or booking and all required information has been collected.\n\nBefore creating an appointment:\n\nUse the Customers Supabase Tool to find the customer.\nUse the customer's UUID id as customer_id.\nNever use the Telegram chat ID as customer_id.\nNever invent or guess customer information.\nMake sure the customer has provided a clear date and time.\n\nAppointment fields:\n\ncustomer_id = customer's UUID from the Customers Supabase Tool\ndate = requested appointment date\ntime = requested appointment time\nstatus = Pending\n\nDo not create an appointment if the date or time is missing or unclear. Supabase",
+        "tableId": "appointments",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "customer_id",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', `Use the customer's UUID id from the Customers Supabase Tool result. Never use the Telegram chat ID as customer_id. Never invent or guess a customer UUID.`, 'string') }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `The appointment date requested by the customer. Use the exact date provided by the customer. If the customer gives a relative date such as tomorrow or next Monday, determine the correct calendar date before creating the appointment. Never invent or guess a date. If the date is missing or unclear, ask the customer.`, 'string') }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `The appointment time requested by the customer. Use the exact time provided by the customer. Convert it to a valid 24-hour time format such as 09:00 or 14:30. Never invent or guess a time. If the time is missing or unclear, ask the customer.`, 'string') }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', `The status of the appointment. For a newly created appointment, always use Pending. Do not invent or change the status.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        832,
+        576
+      ],
+      "id": "5957c654-54e3-44fa-a982-e271391807ec",
+      "name": "Create Appointment Supabase Tool",
+      "credentials": {
+        "supabaseApi": {
+          "id": "PvOTfEuzOnfdb8re",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "359a0d9d-1c32-4371-b400-b8602b900c78",
+              "name": "cleanResponse",
+              "value": "={{ $json.output\n  .replace(/\\\\\\*/g, '')\n  .replace(/\\\\\\./g, '.')\n  .replace(/\\*\\*/g, '')\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        816,
+        0
+      ],
+      "id": "346fc22e-3c54-44e1-a99b-d4d2d56cf8de",
+      "name": "second Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "second Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Products": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customers": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Customer Supabase Tool.": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Conversation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead Supabase Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Appointment Supabase Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "second Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "39545d25-92c9-47c2-9861-5f10f28d7a88",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b9be525b9d4f82cbe34dbc7ddfe55c43abc358eb88514f2c8054df7bdde62d4e"
+  },
+  "nodeGroups": [],
+  "id": "c0cDSQneH0C01CVe",
+  "tags": []
+}
