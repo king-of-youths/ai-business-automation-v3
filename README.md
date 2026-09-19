@@ -98,9 +98,6 @@ The AI collects the appointment date and time before creating the appointment in
 
 Customer conversations can be stored in the database for future reference.
 
-### Human Handoff
-
-Customers can request human assistance, and the conversation can be marked for escalation.
 
 ## Security
 
